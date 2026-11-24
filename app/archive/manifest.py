@@ -11,12 +11,13 @@ def canonical(value):
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(',', ':'), default=str)
 
 
-def batch_key(files):
+def batch_key(files, threshold):
     hashes = digests(files)
-    return sha256(canonical([VERSION, hashes]).encode()).hexdigest(), hashes
+    return sha256(canonical([VERSION, threshold, hashes]).encode()).hexdigest(), hashes
 
 
-def manifest(run_id, hashes, window, name, started):
+def manifest(run_id, hashes, window, name, started, rule_change=None):
     return {'run_id': run_id, 'source': name, 'rule': VERSION, 'sha256': hashes,
             'created_utc': datetime.now(UTC).isoformat(timespec='seconds'),
-            'elapsed_ms': round((perf_counter() - started) * 1000), 'parameters': window}
+            'elapsed_ms': round((perf_counter() - started) * 1000), 'parameters': window,
+            'rule_change': rule_change}

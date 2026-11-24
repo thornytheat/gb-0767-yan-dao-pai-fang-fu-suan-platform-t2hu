@@ -3,9 +3,9 @@ from flask import Blueprint, render_template, request
 from app.api import archive
 from app.archive.certificate import issue
 from app.archive.manifest import batch_key
+from app.archive.run import governed_inspection
 from app.config import VERSION
 from app.errors import InputError
-from app.monitor.inspection import Inspection
 from app.monitor.source import sample
 from app.reasons import LABELS
 
@@ -28,14 +28,24 @@ def show(page='home'):
             certificate = issue(packet)
     else:
         sources = sample(name)
-        audit = Inspection(sources)
+        audit, _ = governed_inspection(archive(), sources)
         results = audit.results()
-        key, _ = batch_key(sources)
+        key, _ = batch_key(sources, audit.window.threshold)
         meta = {'run_id': key, 'rule': VERSION, 'source': name, 'parameters': vars(audit.window)}
+    changes, effective = [], None
     if page == 'runs':
         history = archive().history()
+        changes = archive().list_changes()
+        effective = archive().effective_rules().get(meta['parameters']['stack'])
+        for change in changes:
+            if change['status'] == 'pending':
+                base = archive().lookup(change['base_run'])
+                change['stale'] = (base is None or archive().latest_source_sha(change['stack'])
+                                   != base['manifest']['sha256'])
+                change['conflicted'] = archive().approved_epoch(change['stack']) != change['base_epoch']
     chart = [row for row in results['hours']['rows'] if row['mg_nm3'] is not None]
     ceiling = max((float(row['mg_nm3']) for row in chart), default=0)
     return render_template('base.html', page=page, pages=PAGES, name=name, run_id=run_id, history=history,
                            certificate=certificate, result=results, meta=meta, ceiling=ceiling, labels=LABELS,
+                           changes=changes, effective=effective,
                            issue_rows=[r for r in results['validity']['rows'] if r['state'] == 'missing' or r['late']])

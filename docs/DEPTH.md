@@ -14,6 +14,7 @@
 | M5 报送差异对账 | 核对差值、单据和游离报送 | `GET /api/samples/dirty/reports` | `app/monitor/reconcile.py` `app/monitor/reports.py` | `tests/test_reports.py` |
 | M6 批次留档复跑 | 汇总归档、并发复跑和查看历史 | `POST /api/runs` | `app/archive/run.py` `app/archive/store.py` | `tests/test_runs.py` |
 | M7 监测证据签发 | 下载和校验原件、摘要和判据 | `GET /api/export/{id}` | `app/archive/certificate.py` | `tests/test_evidence.py` |
+| M8 小时门槛换规 | 试算新门槛、核准启用与失效判定 | `POST /api/rule-changes` `POST /api/rule-changes/{id}/approve` | `app/archive/rulechange.py` `app/archive/store.py` | `tests/test_rulechange.py` |
 
 ## 陷阱登记
 
@@ -35,7 +36,8 @@
 
 - 污样分钟源 109 条记录 = 可读 107 + 重复表头 1 + 结构隔离 1。
 - 120 个应测分钟 = 91 有效 + 8 工况免计 + 21 缺证。参比氧复算与报送按小时核对。
-- 内容摘要与规则版本组成留档键，原件和计算结果同事务存储，重复提交复用原清单。
+- 内容摘要、有效门槛与规则版本组成留档键，原件和计算结果同事务存储，重复提交复用原清单。
+- 换规试算以基准留档原件按现行门槛与新门槛各复算一遍，对比小时判定与报送判定；核准是单条条件更新：基准留档源数据摘要须仍为该烟道最新，且核准序号未被他套门槛前移。核准后的归档与预览套用现行门槛，留档清单记录换规编号。
 
 ## 已知边界
 

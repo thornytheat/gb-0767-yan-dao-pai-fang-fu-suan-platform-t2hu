@@ -1,3 +1,4 @@
+from dataclasses import replace
 from functools import cached_property
 
 from app.monitor.counts import minute_counts
@@ -14,8 +15,10 @@ STAGES = ('intake', 'oxygen', 'validity', 'hours', 'reports')
 
 
 class Inspection:
-    def __init__(self, files):
+    def __init__(self, files, threshold=None):
         self.window, self.ledgers = intake(files)
+        if threshold is not None:
+            self.window = replace(self.window, threshold=threshold)
 
     @cached_property
     def intake(self):

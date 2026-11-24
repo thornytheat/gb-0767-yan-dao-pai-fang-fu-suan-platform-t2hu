@@ -32,12 +32,16 @@ def input_packet(payload):
     return files, 'upload'
 
 
-def intake(files):
+def window_of(files):
     try:
         window_raw = json.loads(files['window'].removeprefix('\ufeff'))
     except (json.JSONDecodeError, RecursionError):
         raise InputError('BAD_WINDOW', '窗口文件不是有效 JSON') from None
-    window = Window.parse(window_raw)
+    return Window.parse(window_raw)
+
+
+def intake(files):
+    window = window_of(files)
     parsed = {source: read_csv(files[source], source) for source in HEADERS}
     return window, parsed
 

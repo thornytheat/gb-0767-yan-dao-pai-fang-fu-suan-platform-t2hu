@@ -39,3 +39,33 @@ filter?.addEventListener('change', () => {
     row.hidden = filter.value !== 'all' && (filter.value === 'late' ? row.dataset.late !== 'True' : row.dataset.state !== filter.value);
   }
 });
+const postRule = async (url, body) => {
+  feedback.hidden = false;
+  feedback.dataset.failed = 'false';
+  try {
+    const response = await fetch(url, {
+      method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body),
+    });
+    const record = await response.json();
+    if (!response.ok) throw new Error(record.detail);
+    location.reload();
+  } catch (error) {
+    feedback.dataset.failed = 'true';
+    feedback.textContent = error.message || '换规办理失败，请重试';
+  }
+};
+const trialForm = document.querySelector('#trial-form');
+trialForm?.addEventListener('submit', event => {
+  event.preventDefault();
+  feedback.textContent = '正在试算换规';
+  postRule('/api/rule-changes', {
+    run_id: document.querySelector('#trial-run').value,
+    threshold: Number(document.querySelector('#trial-threshold').value),
+  });
+});
+for (const button of document.querySelectorAll('[data-approve]')) {
+  button.addEventListener('click', () => {
+    feedback.textContent = '正在核准换规';
+    postRule(`/api/rule-changes/${button.dataset.approve}/approve`, {});
+  });
+}

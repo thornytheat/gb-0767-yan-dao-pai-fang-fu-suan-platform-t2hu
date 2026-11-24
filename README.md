@@ -24,8 +24,9 @@ python -m pytest -q
 2. 在「分钟有效性裁决」选「仅缺证」，查看氧量超界、同版冲突和仪器校准。工况重叠分钟在两份记录间以停机优先。
 3. 在「报送差异对账」核对 08:00 复算 30.50、报送 29.75、差额 +0.75 mg/Nm³。09:00 的 44 个有效分钟低于 45 门槛。
 4. 点击「归档复算」并重跑。相同原件复用运行编号。在「监测证据签发」下载带输入摘要、原值、裁决与勾稽的 JSON。
+5. 换门槛在「监测留档复跑」办理：选基准留档、填新门槛先「试算换规」，试算列出从缺证恢复为可对账的小时；核准后新归档按新门槛复算，旧留档证据浓度不改。基准留档的源数据更新后旧试算失效，同一烟道同时只核准一套门槛。
 
-五个预览接口均为 `GET /api/samples/{dirty|clean}/{stage}`，各工序按需计算；`stage` 值见深度登记。自有数据通过 `POST /api/runs` 的 `files` 对象提交字符串 `window`、`minutes`、`modes`、`reports`，也可提交 `{"sample":"dirty"}`。`GET /api/runs/{id}/{stage}` 查询归档，每次归档仅写入一个 SQLite 事务。`GET /api/runs` 列出历史，`GET /api/export/{id}` 签发证据。
+五个预览接口均为 `GET /api/samples/{dirty|clean}/{stage}`，各工序按需计算；`stage` 值见深度登记。自有数据通过 `POST /api/runs` 的 `files` 对象提交字符串 `window`、`minutes`、`modes`、`reports`，也可提交 `{"sample":"dirty"}`。`GET /api/runs/{id}/{stage}` 查询归档，每次归档仅写入一个 SQLite 事务。`GET /api/runs` 列出历史，`GET /api/export/{id}` 签发证据。换规经 `POST /api/rule-changes`（`run_id` 与 `threshold`）试算、`POST /api/rule-changes/{id}/approve` 核准，`GET /api/rule-changes` 查看记录与现行门槛。
 
 - [数据定义与计算边界](docs/DATA-DICTIONARY.md)
 - [模块与陷阱验证](docs/DEPTH.md)
